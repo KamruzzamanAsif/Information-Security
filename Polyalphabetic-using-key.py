@@ -2,12 +2,12 @@ from pydoc import plain
 from time import process_time_ns
 
 
-def make_table(row, column):
+def make_table(row, column, key):
     polyalphabetic_table = [["" for i in range(column)]for j in range(row)]
     
     for i in range(row):
         for j in range(column):
-            a = (i + j - 30) % column   # my defined funciton
+            a = (i + j - key) % column   # my defined funciton
             polyalphabetic_table[i][j] = chr(a)
     
     return polyalphabetic_table
@@ -43,7 +43,9 @@ def decryption(cipher, polyalphabetic_table, row, coloumn):
 def main():
     row = 128
     coloumn = 128
-    polyalphabetic_table = make_table(row, coloumn)
+    print("Enter a key: ",end=" ")
+    key = int(input())
+    polyalphabetic_table = make_table(row, coloumn, key)
     
     plain_text = "Cryptography is Fun and Love" 
     cipher = encryption(plain_text, polyalphabetic_table)
