@@ -83,26 +83,33 @@ def string_to_hex_converter(string):
 def plainHexValues_to_matrix_converter(hex_value):
     #########################################################################
     #       sample input : hex_value 0x2b7e151628aed2a6abf7158809cf4f3c     #
-    #       sample output: in a matrix form according to AES                #
+    #       sample output: [['0x2b', '0x28', '0xab', '0x9'],                #
+    #                       ['0x7e', '0xae', '0xf7', '0xcf'],               #
+    #                       ['0x15', '0xd2', '0x15', '0x4f'],               #
+    #                       ['0x16', '0xa6', '0x88', '0x3c']]               #
     #########################################################################
-    matrix = []
-    for i in range(16):
-        # right shifting the values and bitwise and with ff to get the byte
-        # for example if we get 2b7e after right shifting the the and with
-        # ff will give output 7e
-        """ 
-        An example of calculation:
-            2b7e in binary = 0010101101111110
-            ff in binary   = 0000000011111111
-            ----------------------------------
-        bitwise and value  = 0000000001111110 = 0x7e
-        """
-        byte = (hex_value >> (8 * (15 - i))) & 0xFF
-        # this arranges row wise.. we have to arrange column wise
-        if i % 4 == 0:
-            matrix.append([byte])
-        else:
-            matrix[int(i / 4)].append(byte)
+    
+    # right shifting the values and bitwise and with ff to get the byte
+    # for example if we get 2b7e after right shifting the the and with
+    # ff will give output 7e
+    """ 
+    An example of calculation:
+        2b7e in binary = 0010101101111110
+        ff in binary   = 0000000011111111
+        ----------------------------------
+    bitwise and value  = 0000000001111110 = 0x7e
+    """
+
+    row, column = (4, 4)
+    matrix = [[0x00 for i in range(column)]for j in range(row)] # initalize the matrix with hex 0 value
+
+    index = 0 # for hex_value
+    for j in range(4):
+        for i in range(4):
+            byte = hex((hex_value >> (8 * (15 - index))) & 0xFF)
+            matrix[i][j] = byte # storing values column wise
+            index = index + 1 # update hex_value index
+        
     return matrix
 
 
