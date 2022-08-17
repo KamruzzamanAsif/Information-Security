@@ -113,34 +113,41 @@ def plainHexValues_to_matrix_converter(hex_value):
     return matrix
 
 
-
-
-
-def Rot_word(word):
-    return word[1:] + word[:1]
-
-def Sub_word(word):
-    
-
-def key_expansion(input_key):
-    # convert to hex values byte wise
-    key = []
-    for c in input_key:
-        h = hex(ord(c))
-        key.append(h)
-    
-    # expand key
-    w = [()]*44
+def key_expansion(hex_key):
+   key_matrix = plainHexValues_to_matrix_converter(hex_key)
+   round_key = [] # to store the round keys
+   
+   # at first copy the first 16 bytes (4 words) column wise
+   # as the key_matrix is formed as column wise
+   for j in range(4):
+    temp_list = []
     for i in range(4):
-        w[i] = (key[4*i], key[4*i+1], key[4*i+2], key[4*i+3])
+        temp_list.append(key_matrix[i][j])
+    round_key.append(temp_list)
+   
+   # now add more keys to round key matrix (total 4 word + 40 word)
+   for i in range(4, 44):
+       round_key.append([]) # add a new row
+       if i%4 == 0:
+           for j in range(4):
+               # we will first sub byte and xor with index 1 value of round key[i-1] 
+               # because Rcon left circular shift by 1 byte
+               # doing the below things works for Rcon automatically
+               byte = round_key[i-4][0] ^ (Sbox[round_key[i-1][1]] ^ Rcon[int(i/4)])
+               round_key[i].append(byte)
+               
+               for j in range(1,4):
+                    # used % to get the index 0 while j+1 = 4
+                    byte = round_key[i-4][j] ^ (Sbox[round_key[i-1][(j+1)%4]] ^ Rcon[int(i/4)])
+                    round_key[i].append(byte)
+       else:
+           for j in range(4):
+               byte = round_key[i-4][j] ^ round_key[i-1][j] # w[i] = w[i-4] xor temp -> (w[i-1])
+               round_key[i].append(byte)
     
-    for i in range(4,44):
-        temp = w[i-1]
-        if(i%4==0): 
-            temp = Sub_word(Rot_word(temp)) xor Rcon[i/4]
-        w[i] = w[i-4] xor temp
-            
-    
+   return round_key
+
+
 
 def main():
     # input a text block
@@ -162,9 +169,11 @@ def main():
             break
     
     # taking the hex values as we will work with hex values
-    text = string_to_hex_converter(text)
-    key = string_to_hex_converter(key)
-   
+    hex_text = string_to_hex_converter(text)
+    hex_key = string_to_hex_converter(key)
+    
+    # round key formation
+    round_key = key_expansion(hex_key)
 
 
     
