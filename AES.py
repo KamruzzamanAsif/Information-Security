@@ -55,26 +55,31 @@ Rcon = (
 
 
 def string_to_hex_converter(string):
-    #######################################################
-    #       sample input : hello  (string)                #
-    #       sample output: 0x68656c6c6f (in hexadecimal)  #
-    #######################################################
+    ################################################################
+    #       sample input : hello  (string)                         #
+    #       sample output: 448378203247 (0x68656c6c6f in hexa)     #
+    # ***>> Because there is no such int hex object in python      #
+    #       hex() function just returns the string representation  #
+    #       of your hex value                                      #
+    # ***>> We can return "0x68656c6c6f"                           #
+    # ***>> But can't return int hex object like: 0x68656c6c6f     #
+    # ***>> That's why for simple calculation purpose we use       #
+    #       int representation of hexa and return an int           #
+    # $$$$$ for more: https://cutt.ly/KXxFsLJ                      #
+    ################################################################
     
     hex_string = ''   # temp hex string to store hex value as one single string
     # for first char
     h = hex(ord(string[0]))
-    s = str(h)
-    hex_string += s
+    hex_string += h
     # for other char
     for i in range(1, len(string)):
         h = hex(ord(string[i]))
-        s = str(h)    # to convert into string value
-        hex_string += s[2:]
+        hex_string += h[2:]
     
-    # now convert the hex string in to an integer and then
-    # convert the int to an hex value 
-    hex_int = int(hex_string, 16)
-    hex_value = hex(hex_int)
+    # now convert the hex string into an integer
+    # which is same value in hexadecimal
+    hex_value = int(hex_string, 16)
     
     return hex_value
 
@@ -82,11 +87,17 @@ def string_to_hex_converter(string):
 
 def plainHexValues_to_matrix_converter(hex_value):
     #########################################################################
-    #       sample input : hex_value 0x2b7e151628aed2a6abf7158809cf4f3c     #
-    #       sample output: [['0x2b', '0x28', '0xab', '0x9'],                #
-    #                       ['0x7e', '0xae', '0xf7', '0xcf'],               #
-    #                       ['0x15', '0xd2', '0x15', '0x4f'],               #
-    #                       ['0x16', '0xa6', '0x88', '0x3c']]               #
+    #       sample input : hex_value 57811460909138771071931939740208549692 #
+    #                      (in hexa 0x2b7e151628aed2a6abf7158809cf4f3c)     #
+    #       sample output: [[43, 40, 171, 9],                               #
+    #                       [126, 174, 247, 207],                           #
+    #                       [21, 210, 21, 79],                              #
+    #                       [22, 166, 136, 60]]                             #
+    #                     --in hexa:                                        #
+    #                       [[0x2b, 0x28, 0xab, 0x9],                       #
+    #                       [0x7e, 0xae, 0xf7, 0xcf],                       #
+    #                       [0x15, 0xd2, 0x15, 0x4f],                       #
+    #                       [0x16, 0xa6, 0x88, 0x3c]]                       #
     #########################################################################
     
     # right shifting the values and bitwise and with ff to get the byte
@@ -113,7 +124,30 @@ def plainHexValues_to_matrix_converter(hex_value):
     return matrix
 
 
+
 def key_expansion(hex_key):
+    #############################################################################
+    #    Sample input: hex_value 57811460909138771071931939740208549692         #
+    #                      (in hexa 0x2b7e151628aed2a6abf7158809cf4f3c)         #
+    #    Sample output:                                                         #
+    #           [[43, 126, 21, 22], [40, 174, 210, 166], [171, 247, 21, 136],   #
+    #            [9, 207, 79, 60], [160, 251, 255, 22], [136, 85, 45, 176],     #
+    #            [35, 162, 56, 56], [42, 109, 119, 4], [158, 12, 15, 241],      #
+    #            [22, 89, 34, 65], [53, 251, 26, 121], [31, 150, 109, 125],     #
+    #            [10, 52, 244, 53], [28, 109, 214, 116], [41, 150, 204, 13],    #
+    #            [54, 0, 161, 112], [97, 14, 173, 56], [125, 99, 123, 76],      #
+    #            [84, 245, 183, 65], [98, 245, 22, 49], [151, 89, 122, 130],    #
+    #            [234, 58, 1, 206], [190, 207, 182, 143], [220, 58, 160, 190],  #
+    #            [55, 153, 244, 36], [221, 163, 245, 234], [99, 108, 67, 101],  #
+    #            [191, 86, 227, 219], [198, 200, 13, 108], [27, 107, 248, 134], #
+    #            [120, 7, 187, 227], [199, 81, 88, 56], [151, 34, 138, 42],     #
+    #            [140, 73, 114, 172], [244, 78, 201, 79], [51, 31, 145, 119],   #
+    #            [76, 184, 100, 242], [192, 241, 22, 94], [52, 191, 223, 17],   #
+    #            [7, 160, 78, 102], [154, 161, 97, 1], [90, 80, 119, 95],       #
+    #            [110, 239, 168, 78], [105, 79, 230, 40]]                       #
+    # ###########################################################################
+  
+    
    key_matrix = plainHexValues_to_matrix_converter(hex_key)
    round_key = [] # to store the round keys
    
@@ -129,17 +163,16 @@ def key_expansion(hex_key):
    for i in range(4, 44):
        round_key.append([]) # add a new row
        if i%4 == 0:
-           for j in range(4):
-               # we will first sub byte and xor with index 1 value of round key[i-1] 
-               # because Rcon left circular shift by 1 byte
-               # doing the below things works for Rcon automatically
-               byte = round_key[i-4][0] ^ (Sbox[round_key[i-1][1]] ^ Rcon[int(i/4)])
-               round_key[i].append(byte)
-               
-               for j in range(1,4):
-                    # used % to get the index 0 while j+1 = 4
-                    byte = round_key[i-4][j] ^ (Sbox[round_key[i-1][(j+1)%4]] ^ Rcon[int(i/4)])
-                    round_key[i].append(byte)
+            # we will first sub byte and xor with index 1 value of round key[i-1] 
+            # because Rcon left circular shift by 1 byte
+            # doing the below things works for Rcon automatically
+            byte = round_key[i-4][0] ^ (Sbox[int(round_key[i-1][1])] ^ Rcon[int(i/4)])
+            round_key[i].append(byte)
+            
+            for j in range(1,4):
+                # used % to get the index 0 while j+1 = 4
+                byte = round_key[i-4][j] ^ (Sbox[int(round_key[i-1][(j+1)%4])] ^ Rcon[int(i/4)])
+                round_key[i].append(byte)
        else:
            for j in range(4):
                byte = round_key[i-4][j] ^ round_key[i-1][j] # w[i] = w[i-4] xor temp -> (w[i-1])
@@ -148,6 +181,51 @@ def key_expansion(hex_key):
    return round_key
 
 
+def add_round_key(text_matrix, w_keys):
+    for i in range(4):
+        for j in range(4):
+            text_matrix[i][j] ^= w_keys[i][j] 
+    
+    return text_matrix
+    
+def substitute_bytes(text_matrix):
+    for i in range(4):
+        for j in range(4):
+            text_matrix[i][j] = Sbox(text_matrix[i][j])
+    
+    return text_matrix
+
+def shift_rows(text_matrix):
+    text_matrix[1][0], text_matrix[1][1], text_matrix[1][2], text_matrix[1][3] \
+        = text_matrix[1][1], text_matrix[1][2], text_matrix[1][3], text_matrix[1][0]
+    text_matrix[2][0], text_matrix[2][1], text_matrix[2][2], text_matrix[2][3] \
+        = text_matrix[2][2], text_matrix[2][3], text_matrix[2][0], text_matrix[2][1]
+    text_matrix[3][0], text_matrix[3][1], text_matrix[3][2], text_matrix[3][3] \
+        = text_matrix[3][3], text_matrix[3][0], text_matrix[3][1], text_matrix[3][2]
+    
+    return text_matrix
+    
+    
+    
+
+def encryption(hexValue_text, round_key):
+    #####################################################
+    #       Sample input: plainText (as hex value text)
+
+    text_matrix = plainHexValues_to_matrix_converter(hexValue_text)
+    
+    text_matrix = add_round_key(text_matrix, round_key[:4]) # pass first 4 list(words) from round key
+    
+    for i in range(1, 10):
+        text_matrix = substitute_bytes(text_matrix)
+        text_matrix = shift_rows(text_matrix)
+        text_matrix = mix_columns(text_matrix)
+        text_matrix = add_round_key(text_matrix)
+    
+    text_matrix = substitute_bytes(text_matrix)
+    text_matrix = shift_rows(text_matrix)
+    text_matrix = add_round_key(text_matrix)
+     
 
 def main():
     # input a text block
@@ -169,11 +247,14 @@ def main():
             break
     
     # taking the hex values as we will work with hex values
-    hex_text = string_to_hex_converter(text)
-    hex_key = string_to_hex_converter(key)
+    hexValue_text = string_to_hex_converter(text)
+    hexValue_key = string_to_hex_converter(key)
     
     # round key formation
-    round_key = key_expansion(hex_key)
+    round_key = key_expansion(hexValue_key)
+    
+    # encryption
+    encryption(hexValue_text, round_key)
 
 
     
