@@ -117,7 +117,7 @@ def plainHexValues_to_matrix_converter(hex_value):
     index = 0 # for hex_value
     for j in range(4):
         for i in range(4):
-            byte = hex((hex_value >> (8 * (15 - index))) & 0xFF)
+            byte = (hex_value >> (8 * (15 - index))) & 0xFF
             matrix[i][j] = byte # storing values column wise
             index = index + 1 # update hex_value index
         
@@ -191,7 +191,8 @@ def add_round_key(text_matrix, w_keys):
 def substitute_bytes(text_matrix):
     for i in range(4):
         for j in range(4):
-            text_matrix[i][j] = Sbox(text_matrix[i][j])
+            #print (text_matrix[i][j])
+            text_matrix[i][j] = Sbox[int(text_matrix[i][j])] 
     
     return text_matrix
 
@@ -204,9 +205,36 @@ def shift_rows(text_matrix):
         = text_matrix[3][3], text_matrix[3][0], text_matrix[3][1], text_matrix[3][2]
     
     return text_matrix
+
+
+def two_mul(a):
+    if(a & 0x80): # check is high bit is 1
+        a = ((a << 1) ^ 0x1B) & 0xFF  # bitwise and with FF to set length within 8 bit else
+                                      # program will make it 9 bit
+                                      # eg. 11001100 << 1   =  110011000 (9 bit as pc calculate on 16 bits)
+    else:
+        a = a << 1
+
+    return a
+
+
+def three_mul(a):
+    a = two_mul(a) ^ a
     
+    return a
+
+
+def mix_columns(text_matrix):
+    s = [[0x00 for i in range(4)]for j in range(4)]
     
+    for j in range(4):
+        s[0][j] = two_mul(text_matrix[0][j]) ^ three_mul(text_matrix[1][j]) ^ text_matrix[2][j] ^ text_matrix[3][j]
+        s[1][j] = text_matrix[0][j] ^ two_mul(text_matrix[1][j]) ^ three_mul(text_matrix[2][j]) ^ text_matrix[3][j]
+        s[2][j] = text_matrix[0][j] ^ text_matrix[1][j] ^ two_mul(text_matrix[2][j]) ^ three_mul(text_matrix[3][j])
+        s[3][j] = three_mul(text_matrix[0][j]) ^ text_matrix[1][j] ^ text_matrix[2][j] ^ two_mul(text_matrix[3][j])
     
+    return s
+        
 
 def encryption(hexValue_text, round_key):
     #####################################################
@@ -220,31 +248,35 @@ def encryption(hexValue_text, round_key):
         text_matrix = substitute_bytes(text_matrix)
         text_matrix = shift_rows(text_matrix)
         text_matrix = mix_columns(text_matrix)
-        text_matrix = add_round_key(text_matrix)
+        text_matrix = add_round_key(text_matrix, round_key[4 * i : 4 * (i + 1)])
     
     text_matrix = substitute_bytes(text_matrix)
     text_matrix = shift_rows(text_matrix)
-    text_matrix = add_round_key(text_matrix)
+    text_matrix = add_round_key(text_matrix, round_key[40:])
      
+    return text_matrix
 
 def main():
-    # input a text block
-    while True:
-        print("Enter a text block to encrypt or decrypt: ",end=" ")
-        text = input()
-        if len(text) != 16:
-            print("Invalid text block input!")
-        else:
-            break
+    # # input a text block
+    # while True:
+    #     print("Enter a text block to encrypt or decrypt: ",end=" ")
+    #     text = input()
+    #     if len(text) != 16:
+    #         print("Invalid text block input!")
+    #     else:
+    #         break
     
-    # input a key
-    while True:
-        print("Enter a key: ",end=" ")
-        key = input()
-        if len(key) != 16:
-            print("Invalid key input!")
-        else:
-            break
+    # # input a key
+    # while True:
+    #     print("Enter a key: ",end=" ")
+    #     key = input()
+    #     if len(key) != 16:
+    #         print("Invalid key input!")
+    #     else:
+    #         break
+    
+    text = 'I am good to go.'
+    key = "let's play today"
     
     # taking the hex values as we will work with hex values
     hexValue_text = string_to_hex_converter(text)
@@ -254,8 +286,10 @@ def main():
     round_key = key_expansion(hexValue_key)
     
     # encryption
-    encryption(hexValue_text, round_key)
+    cipher_matrix = encryption(hexValue_text, round_key)
 
+    # print(round_key)
+    print(cipher_matrix)
 
     
 if __name__ == '__main__':
