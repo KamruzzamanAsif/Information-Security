@@ -7,6 +7,9 @@
 #######################################################
 
 
+import re
+
+
 Sbox = (
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -234,12 +237,28 @@ def mix_columns(text_matrix):
         s[3][j] = three_mul(text_matrix[0][j]) ^ text_matrix[1][j] ^ text_matrix[2][j] ^ two_mul(text_matrix[3][j])
     
     return s
-        
+
+
+def matrix_to_hex_converter(matrix):
+    #######################################
+    #   sample input: matrix of int       #
+    #   sample output: hex string         #
+    #######################################
+    
+    text = '0x'
+    for j in range(4):
+        for i in range(4):
+            s = hex(matrix[i][j])
+            text += s[2:]
+    
+    return text
+
 
 def encryption(hexValue_text, round_key):
     #####################################################
-    #       Sample input: plainText (as hex value text)
-
+    #       Sample input: plainText (as hex value text) #
+    #       Sample output: cihper text(as hex string)   #
+    #####################################################
     text_matrix = plainHexValues_to_matrix_converter(hexValue_text)
     
     text_matrix = add_round_key(text_matrix, round_key[:4]) # pass first 4 list(words) from round key
@@ -253,8 +272,60 @@ def encryption(hexValue_text, round_key):
     text_matrix = substitute_bytes(text_matrix)
     text_matrix = shift_rows(text_matrix)
     text_matrix = add_round_key(text_matrix, round_key[40:])
-     
-    return text_matrix
+    
+    print("Cipher matrix: ", end=' ')
+    print(text_matrix)
+    cipher_text = matrix_to_hex_converter(text_matrix)
+    
+    return cipher_text
+
+
+
+def inv_substitute_bytes(matrix):
+    for i in range(4):
+        for j in range(4):
+            matrix[i][j] = InvSbox[matrix[i][j]]
+    
+    return matrix 
+
+def inv_shift_rows(matrix):
+    matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3] = \
+        matrix[1][3], matrix[1][0], matrix[1][1], matrix[1][2]
+        
+    matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3] = \
+        matrix[2][2], matrix[2][3], matrix[2][0], matrix[2][1]
+        
+    matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3] = \
+        matrix[3][1], matrix[3][2], matrix[3][3], matrix[3][0]
+    
+    return matrix
+    
+
+def inv_mix_columns(matrix):
+    
+    # what to do...?
+
+
+
+def decryption(cipherText_value, round_key):
+    cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
+    
+    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
+    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+    cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    
+    for i in range(9, 0, -1):
+        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
+        cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
+        cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+        cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    
+    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
+    
+    plain_hex = matrix_to_hex_converter(cipher_state_matrix)
+    
+    return plain_hex
+
 
 def main():
     # # input a text block
@@ -275,8 +346,9 @@ def main():
     #     else:
     #         break
     
-    text = 'I am good to go.'
-    key = "let's play today"
+    text = "Two One Nine Two"
+    key = 'Thats my Kung Fu'  # expansion key mile na...(kavaliro.com er pdf er sathe) baki sob thik ace
+    
     
     # taking the hex values as we will work with hex values
     hexValue_text = string_to_hex_converter(text)
@@ -286,11 +358,14 @@ def main():
     round_key = key_expansion(hexValue_key)
     
     # encryption
-    cipher_matrix = encryption(hexValue_text, round_key)
-
-    # print(round_key)
-    print(cipher_matrix)
-
+    cipher_text= encryption(hexValue_text, round_key)
+    print("cipher text: " + cipher_text)
+    
+    # decryption
+    cipherText_value = int(cipher_text, 16)
+    plain_text_hex = decryption(cipherText_value, round_key)
+    
+    
     
 if __name__ == '__main__':
     main()
