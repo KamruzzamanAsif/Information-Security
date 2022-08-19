@@ -174,7 +174,7 @@ def key_expansion(hex_key):
             
             for j in range(1,4):
                 # used % to get the index 0 while j+1 = 4
-                byte = round_key[i-4][j] ^ (Sbox[int(round_key[i-1][(j+1)%4])] ^ Rcon[int(i/4)])
+                byte = round_key[i-4][j] ^ Sbox[int(round_key[i-1][(j+1)%4])]
                 round_key[i].append(byte)
        else:
            for j in range(4):
@@ -301,31 +301,30 @@ def inv_shift_rows(matrix):
     return matrix
     
 
-def inv_mix_columns(matrix):
+# def inv_mix_columns(matrix):
     
-    # what to do...?
+#     # what to do...?
 
 
 
-def decryption(cipherText_value, round_key):
-    cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
+# def decryption(cipherText_value, round_key):
+#     cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
     
-    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
-    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
-    cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+#     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
+#     cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+#     cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
     
-    for i in range(9, 0, -1):
-        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
-        cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
-        cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
-        cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+#     for i in range(9, 0, -1):
+#         cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
+#         cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
+#         cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+#         cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
     
-    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
+#     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
     
-    plain_hex = matrix_to_hex_converter(cipher_state_matrix)
+#     plain_hex = matrix_to_hex_converter(cipher_state_matrix)
     
-    return plain_hex
-
+#     return plain_hex
 
 def main():
     # # input a text block
@@ -347,7 +346,7 @@ def main():
     #         break
     
     text = "Two One Nine Two"
-    key = 'Thats my Kung Fu'  # expansion key mile na...(kavaliro.com er pdf er sathe) baki sob thik ace
+    key = 'Thats my Kung Fu' 
     
     
     # taking the hex values as we will work with hex values
@@ -361,9 +360,9 @@ def main():
     cipher_text= encryption(hexValue_text, round_key)
     print("cipher text: " + cipher_text)
     
-    # decryption
-    cipherText_value = int(cipher_text, 16)
-    plain_text_hex = decryption(cipherText_value, round_key)
+    # # decryption
+    # cipherText_value = int(cipher_text, 16)
+    # plain_text_hex = decryption(cipherText_value, round_key)
     
     
     
