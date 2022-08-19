@@ -87,6 +87,19 @@ def string_to_hex_converter(string):
     return hex_value
 
 
+def hex_to_string_converter(hex_string):
+    #####################################################################
+    #  Sample input: '0x5468617473206D79204B756E67204675' (hex string)  #
+    #  Sample output: Thats my Kung Fu (plain text)                     #
+    #####################################################################
+    
+    string = ''
+    for i in range(2, len(hex_string), 2):
+        string += (chr(int(hex_string[i:i+2], 16)))
+    
+    return string 
+    
+    
 
 def plainHexValues_to_matrix_converter(hex_value):
     #########################################################################
@@ -184,10 +197,12 @@ def key_expansion(hex_key):
    return round_key
 
 
+
 def add_round_key(text_matrix, w_keys):
     # at first refashion our 4x4 key matrix 
-    # column wise. Because we store the 
-    # values column wise
+    # column wise. Because we stored the values
+    # row wise in w_keys. But while round key
+    # we xor with the column wise key matrix
     new_w_keys = [[0 for i in range(4)]for j in range(4)]
     
     for i in range(4):
@@ -199,6 +214,8 @@ def add_round_key(text_matrix, w_keys):
             text_matrix[i][j] ^= new_w_keys[i][j] 
     
     return text_matrix
+
+
     
 def substitute_bytes(text_matrix):
     for i in range(4):
@@ -207,6 +224,8 @@ def substitute_bytes(text_matrix):
             text_matrix[i][j] = Sbox[int(text_matrix[i][j])] 
     
     return text_matrix
+
+
 
 def shift_rows(text_matrix):
     text_matrix[1][0], text_matrix[1][1], text_matrix[1][2], text_matrix[1][3] \
@@ -217,6 +236,8 @@ def shift_rows(text_matrix):
         = text_matrix[3][3], text_matrix[3][0], text_matrix[3][1], text_matrix[3][2]
     
     return text_matrix
+
+
 
 
 def two_mul(a):
@@ -230,10 +251,12 @@ def two_mul(a):
     return a
 
 
+
 def three_mul(a):
     a = two_mul(a) ^ a
     
     return a
+
 
 
 def mix_columns(text_matrix):
@@ -246,6 +269,8 @@ def mix_columns(text_matrix):
         s[3][j] = three_mul(text_matrix[0][j]) ^ text_matrix[1][j] ^ text_matrix[2][j] ^ two_mul(text_matrix[3][j])
     
     return s
+
+
 
 
 def matrix_to_hex_converter(matrix):
@@ -261,6 +286,8 @@ def matrix_to_hex_converter(matrix):
             text += s[2:]
     
     return text
+
+
 
 
 def encryption(hexValue_text, round_key):
@@ -295,6 +322,7 @@ def inv_substitute_bytes(matrix):
     
     return matrix 
 
+
 def inv_shift_rows(matrix):
     matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3] = \
         matrix[1][3], matrix[1][0], matrix[1][1], matrix[1][2]
@@ -306,32 +334,65 @@ def inv_shift_rows(matrix):
         matrix[3][1], matrix[3][2], matrix[3][3], matrix[3][0]
     
     return matrix
-    
-
-# def inv_mix_columns(matrix):
-    
-#     # what to do...?
 
 
+def E_mul(x):
+    # hex E in decimal 14
+    a = two_mul((two_mul((two_mul(x) ^ x)) ^ x))
+    
+    return a 
 
-# def decryption(cipherText_value, round_key):
-#     cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
+def B_mul(x):
+    # hex B in decimal 11
+    a = two_mul((two_mul(two_mul(x)) ^ x)) ^ x
     
-#     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
-#     cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
-#     cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    return a 
+
+def D_mul(x):
+    # hex D in decimal 13
+    a = two_mul(two_mul(two_mul(x) ^ x)) ^ x 
     
-#     for i in range(9, 0, -1):
-#         cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
-#         cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
-#         cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
-#         cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    return a
+
+def nine_mul(x):
+    a = two_mul(two_mul(two_mul(x))) ^ x
     
-#     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
+    return a
+
+
+def inv_mix_columns(matrix):
+    s = [[0x00 for i in range(4)]for j in range(4)]
     
-#     plain_hex = matrix_to_hex_converter(cipher_state_matrix)
+    for j in range(4):
+        s[0][j] = E_mul(matrix[0][j]) ^ B_mul(matrix[1][j]) ^ D_mul(matrix[2][j]) ^ nine_mul(matrix[3][j])
+        s[1][j] = nine_mul(matrix[0][j]) ^ E_mul(matrix[1][j]) ^ B_mul(matrix[2][j]) ^ D_mul(matrix[3][j])
+        s[2][j] = D_mul(matrix[0][j]) ^ nine_mul(matrix[1][j]) ^ E_mul(matrix[2][j]) ^ B_mul(matrix[3][j])
+        s[3][j] = B_mul(matrix[0][j]) ^ D_mul(matrix[1][j]) ^ nine_mul(matrix[2][j]) ^ E_mul(matrix[3][j])
     
-#     return plain_hex
+    return s
+
+
+
+def decryption(cipherText_value, round_key):
+    cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
+    
+    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
+    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+    cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    
+    for i in range(9, 0, -1):
+        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
+        cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
+        cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
+        cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    
+    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
+    
+    plain_hex = matrix_to_hex_converter(cipher_state_matrix)
+    
+    return plain_hex
+
+
 
 def main():
     # # input a text block
@@ -367,10 +428,13 @@ def main():
     cipher_text= encryption(hexValue_text, round_key)
     print("cipher text: " + cipher_text)
     
-    # # decryption
-    # cipherText_value = int(cipher_text, 16)
-    # plain_text_hex = decryption(cipherText_value, round_key)
-    
+    # decryption
+    cipherText_value = int(cipher_text, 16)
+    print("****** Decryption: ******")
+    plain_text_hex = decryption(cipherText_value, round_key)
+    print("Plain Text Hex: " + plain_text_hex)
+    plain_text = hex_to_string_converter(plain_text_hex)
+    print("Plain text: "+ plain_text)
     
     
 if __name__ == '__main__':
