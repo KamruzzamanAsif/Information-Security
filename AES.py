@@ -376,17 +376,20 @@ def inv_mix_columns(matrix):
 def decryption(cipherText_value, round_key):
     cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
     
+    
     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
-    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
-    cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
     
     for i in range(9, 0, -1):
-        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
-        cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
         cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
         cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
-    
-    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[:4])
+        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
+        cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
+     
+    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)    
+    cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
+    cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[ :4]) 
+        
+        
     
     plain_hex = matrix_to_hex_converter(cipher_state_matrix)
     
