@@ -78,6 +78,8 @@ def string_to_hex_converter(string):
     # for other char
     for i in range(1, len(string)):
         h = hex(ord(string[i]))
+        if(len(h)!=4):           # to handel such hex values 02, 03, 08 
+            hex_string += '0'
         hex_string += h[2:]
     
     # now convert the hex string into an integer
@@ -283,6 +285,8 @@ def matrix_to_hex_converter(matrix):
     for j in range(4):
         for i in range(4):
             s = hex(matrix[i][j])
+            if(len(s) != 4): # to handel such hex values 02, 04, 09 ..
+                text += '0'
             text += s[2:]
     
     return text
@@ -333,7 +337,7 @@ def inv_shift_rows(matrix):
     matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3] = \
         matrix[3][1], matrix[3][2], matrix[3][3], matrix[3][0]
     
-    return matrix
+    return matrix 
 
 
 def E_mul(x):
@@ -376,21 +380,19 @@ def inv_mix_columns(matrix):
 def decryption(cipherText_value, round_key):
     cipher_state_matrix = plainHexValues_to_matrix_converter(cipherText_value)
     
-    
     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[40: ])
     
+    index = 9 # for round key
     for i in range(9, 0, -1):
         cipher_state_matrix = inv_shift_rows(cipher_state_matrix)
         cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
-        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * i : 4 * (i + 1)])
+        cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[4 * index : 4 * (index + 1)])
+        index -= 1  # update index
         cipher_state_matrix = inv_mix_columns(cipher_state_matrix)
      
-    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)    
+    cipher_state_matrix = inv_shift_rows(cipher_state_matrix)   
     cipher_state_matrix = inv_substitute_bytes(cipher_state_matrix)
     cipher_state_matrix = add_round_key(cipher_state_matrix, round_key[ :4]) 
-        
-        
-    
     plain_hex = matrix_to_hex_converter(cipher_state_matrix)
     
     return plain_hex
