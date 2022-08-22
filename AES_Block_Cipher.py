@@ -7,6 +7,7 @@
 #######################################################
 
 
+from pydoc import plain
 import re
 
 
@@ -417,24 +418,32 @@ def main():
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
     
+    # storing the actual text length
+    text_length = len(text)
+    
     # encryption
-    # while len(text)%16 != 0:
-    #     text += '0'
+    while len(text)%16 != 0:
+        text += '*'
     
     cipher_text = ''
     for i in range(0, len(text), 16):
         hexValue_text = string_to_hex_converter(text[i:i+16])
-        cipher_text += encryption(hexValue_text, round_key)
+        temp = encryption(hexValue_text, round_key)
+        cipher_text += temp[2:]
     
+    cipher_text = '0x' + cipher_text
     print("cipher text: " + cipher_text)
     
     # decryption
-    # cipherText_value = int(cipher_text, 16)
-    # print("****** Decryption: ******")
-    # plain_text_hex = decryption(cipherText_value, round_key)
-    # print("Plain Text Hex: " + plain_text_hex)
-    # plain_text = hex_to_string_converter(plain_text_hex)
-    # print("Plain text: "+ plain_text)
+    print("****** Decryption: ******")
+    plain_text = ''
+    for i in range(2, len(cipher_text), 32):
+        temp = '0x' + cipher_text[i:i+32]
+        cipherText_value = int(temp, 16)
+        plain_text_hex = decryption(cipherText_value, round_key)
+        plain_text += hex_to_string_converter(plain_text_hex)
+    
+    print("Plain text: "+ plain_text[:text_length])
 
     
 if __name__ == '__main__':
