@@ -69,7 +69,7 @@ def xor(x, y):
     return s
 
 def ROTR(x, n): return x[len(x)-n: ] + x[ :len(x)-n]
-def SHR(x, n): return x[n: ].ljust(64, '0')  # ljust funciton for padding 0 to right side
+def SHR(x, n): return x[ :len(x)-n].rjust(64, '0') 
 
 def sigma0(s): return xor(xor(ROTR(s, 1), ROTR(s, 8)), SHR(s, 7))
 def sigma1(s): return xor(xor(ROTR(s, 19), ROTR(s, 61)), SHR(s, 6)) 
@@ -127,8 +127,8 @@ k = [0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189d
 
 def main():
     print("Enter your text: ", end="")
-    plalin_text = input()
-    text_binary_data = stringToBinary(plalin_text)
+    plain_text = input()
+    text_binary_data = stringToBinary(plain_text)
     text_binary_data = text_binary_data.replace(' ', '')
 
     # append length
@@ -136,7 +136,6 @@ def main():
     length_binary_data = intToBinary(length_of_data, 128)
 
     final_binary_data = preprocess(text_binary_data, length_binary_data)
-    print("The final data passed to SHA-512: " + final_binary_data)
     N = int(len(final_binary_data)/1024)
 
     # convert keys as binary string
@@ -153,6 +152,7 @@ def main():
         W = []
         for j in range(16):
             W.append(M[j*64 : (j+1)*64])
+        
         for j in range(16, 80):
             s = ''
             s += additionModulo(sigma1(W[j-2]), sigma0(W[j-15]))
@@ -170,15 +170,15 @@ def main():
             T1 = additionModulo(T1, key[j])
 
             T2 = additionModulo(SUM_0To512(a), Maj(a, b, c))
-
-            a = additionModulo(T1, T2)
-            b = a 
-            c = b
-            d = c 
-            e = additionModulo(d, T1)
-            f = e
-            g = f
+            
             h = g
+            g = f
+            f = e
+            e = additionModulo(d, T1)
+            d = c
+            c = b
+            b = a
+            a = additionModulo(T1, T2)
 
         # update H 
         q = ''
@@ -207,12 +207,11 @@ def main():
         ########## end of message digest generation ##########
 
     #### print result ####
-    result = '0x'
+    result = ''
     for i in range(128):
         x, y = hex(int(H[i * 4:(i + 1) * 4], 2)).split('x')
         result += y
     print("Hash Code is: "+ result)
-
 
 
 if __name__ == '__main__':
