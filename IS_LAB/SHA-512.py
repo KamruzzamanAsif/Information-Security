@@ -14,7 +14,11 @@ def stringToBinary(string):
     :param string: String to convert.
     :return: Binary string.
     """
-    return ' '.join('{0:08b}'.format(ord(x), 'b') for x in string)
+    ##>> this works only for ascii characters [e.g. this won't work for em dash (–) which doesn't have any defined ascii value]
+   # return ' '.join('{0:08b}'.format(ord(x), 'b') for x in string)  
+    
+    ##>> this works for any characters
+    return ' '.join('{0:08b}'.format(b) for b in string.encode('utf-8')) 
 
 
 def intToBinary(x, y):
@@ -163,6 +167,7 @@ def main():
         ##### rounds #####
         global a, b, c, d, e, f, g, h, H  # we intoduce the variables as global variables
                                           # so that program don't take them as local variables
+
         for j in range(80):
             T1 = additionModulo(h, Ch(e, f, g))
             T1 = additionModulo(T1, SUM_1To512(e))
