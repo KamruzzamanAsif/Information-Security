@@ -6,9 +6,10 @@ key = fin.readline()
 
 fout = open("/home/asif/Information-Security/LabFinal/FileEncryptDecrypt/output.txt", "w+")
 cipher_text = Encrypt(text, key)
-fout.writelines(cipher_text)
+fout.write(cipher_text+'\n')
 plain_text = Decrypt(cipher_text, key)
-fout.writelines(plain_text)
+plain_text = plain_text[:len(text)]
+fout.write(plain_text)
 
 
 
