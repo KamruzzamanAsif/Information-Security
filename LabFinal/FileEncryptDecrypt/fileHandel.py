@@ -1,8 +1,9 @@
 from AES_Funcitons import *
 
 fin = open("/home/asif/Information-Security/LabFinal/FileEncryptDecrypt/input.txt", "r")
-text = fin.readline()
-key = fin.readline()
+temp = fin.read().splitlines()
+text = temp[0]
+key = temp[1]
 
 fout = open("/home/asif/Information-Security/LabFinal/FileEncryptDecrypt/output.txt", "w+")
 cipher_text = Encrypt(text, key)
