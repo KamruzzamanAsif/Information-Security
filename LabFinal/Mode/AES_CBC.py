@@ -403,13 +403,13 @@ def xor_hex_strings(xs, ys):
     return "".join(chr(ord(x) ^ ord(y)) for x, y in zip(xs, ys))
 
 
-def Encrypt(text, key):
+def Encrypt(text, key, iv):
     # round key formation
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
     
     # for CBC encoding the initial vector
-    iv_hex = string_to_hex_converter("Thats My Kung Fu")
+    iv_hex = string_to_hex_converter(iv)
     
     # encryption
     while len(text)%16 != 0:
@@ -428,13 +428,13 @@ def Encrypt(text, key):
     return cipher_text
     
 
-def Decrypt(cipher_text, key):
+def Decrypt(cipher_text, key, iv):
     # round key formation
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
     
     # for CBC encoding the initial vector
-    iv_hex = string_to_hex_converter("Thats My Kung Fu")
+    iv_hex = string_to_hex_converter(iv)
 
     plain_text = ''
     index = 0
@@ -475,16 +475,19 @@ def main():
         else:
             break
     
+    print("Enter initial vector: ", end=" ")
+    iv = input()
+    
     # storing the actual text length
     text_length = len(text)
     
     # encrypt 
-    cipher_text = Encrypt(text, key)
+    cipher_text = Encrypt(text, key, iv)
     print("cipher text: " + cipher_text)
     
     # decryption
     print("****** Decryption: ******")
-    plain_text = Decrypt(cipher_text, key)
+    plain_text = Decrypt(cipher_text, key, iv)
     print("Plain text: "+ plain_text[:text_length])
 
     

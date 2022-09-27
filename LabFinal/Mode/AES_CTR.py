@@ -404,13 +404,13 @@ def xor_hex_strings(xs, ys):
     return "".join(chr(ord(x) ^ ord(y)) for x, y in zip(xs, ys))
 
 
-def Encrypt(text, key):
+def Encrypt(text, key, counter):
     # round key formation
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
     
     # for CBC encoding the initial vector
-    counter = string_to_hex_converter("Thats My Kung Fu")
+    counter = string_to_hex_converter(counter)
     
     # no need to pad in crt 
     # while len(text)%16 != 0:
@@ -430,13 +430,13 @@ def Encrypt(text, key):
     return cipher_text
     
 
-def Decrypt(cipher_text, key):
+def Decrypt(cipher_text, key, counter):
     # round key formation
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
     
     # for CRT encoding the initial counter
-    counter = string_to_hex_converter("Thats My Kung Fu")
+    counter = string_to_hex_converter(counter)
 
     plain_text = ''
     for i in range(2, len(cipher_text), 32):
@@ -468,16 +468,19 @@ def main():
         else:
             break
     
+    print("Enter counter: ",end=" ")
+    counter = input()
+    
     # storing the actual text length
     text_length = len(text)
     
     # encrypt 
-    cipher_text = Encrypt(text, key)
+    cipher_text = Encrypt(text, key, counter)
     print("cipher text: " + cipher_text)
     
     # decryption
     print("****** Decryption: ******")
-    plain_text = Decrypt(cipher_text, key)
+    plain_text = Decrypt(cipher_text, key, counter)
     print("Plain text: "+ plain_text[:text_length])
 
     
