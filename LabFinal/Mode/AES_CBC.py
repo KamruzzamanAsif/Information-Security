@@ -301,26 +301,14 @@ def encryption(hexValue_text, round_key):
     #       Sample output: cihper text(as hex string)   #
     #####################################################
     text_matrix = plainHexValues_to_matrix_converter(hexValue_text)
-
-    # tryin CBC encoding
-    iv_text = string_to_hex_converter("Thats My Kung Fu")
-    iv = plainHexValues_to_matrix_converter(iv_text)
     
     text_matrix = add_round_key(text_matrix, round_key[:4]) # pass first 4 list(words) from round key
     
     for i in range(1, 10):
-        for i in range(len(text_matrix)):
-            for j in range(len(iv)):
-                text_matrix[i][j] = text_matrix[i][j] ^ iv[i][j]
-
         text_matrix = substitute_bytes(text_matrix)
         text_matrix = shift_rows(text_matrix)
         text_matrix = mix_columns(text_matrix)
         text_matrix = add_round_key(text_matrix, round_key[4 * i : 4 * (i + 1)])
-
-        iv = text_matrix
-
-        
     
     text_matrix = substitute_bytes(text_matrix)
     text_matrix = shift_rows(text_matrix)
@@ -411,6 +399,49 @@ def decryption(cipherText_value, round_key):
     return plain_hex
 
 
+def xor_hex_strings(xs, ys):
+    return "".join(chr(ord(x) ^ ord(y)) for x, y in zip(xs, ys))
+
+
+def Encrypt(text, key):
+    # round key formation
+    hexValue_key = string_to_hex_converter(key)
+    round_key = key_expansion(hexValue_key)
+    
+    # for CBC encoding the initial vector
+    iv_hex = string_to_hex_converter("Thats My Kung Fu")
+    
+    # encryption
+    while len(text)%16 != 0:
+        text += '*'
+    
+    cipher_text = ''
+    for i in range(0, len(text), 16):
+        hexValue_text = string_to_hex_converter(text[i:i+16])
+        input_hex_value_text = hexValue_text ^ iv_hex
+        temp = encryption(input_hex_value_text, round_key)
+        iv_hex = int(temp, 16) # update iv_hex
+        cipher_text += temp[2:]
+        
+    
+    cipher_text = '0x' + cipher_text
+    return cipher_text
+    
+
+def Decrypt(cipher_text, key):
+    # round key formation
+    hexValue_key = string_to_hex_converter(key)
+    round_key = key_expansion(hexValue_key)
+
+    plain_text = ''
+    for i in range(2, len(cipher_text), 32):
+        temp = '0x' + cipher_text[i:i+32]
+        cipherText_value = int(temp, 16)
+        plain_text_hex = decryption(cipherText_value, round_key)
+        plain_text += hex_to_string_converter(plain_text_hex)
+    
+    return plain_text
+
 
 def main():
     # input a text block
@@ -426,35 +457,16 @@ def main():
         else:
             break
     
-    # round key formation
-    hexValue_key = string_to_hex_converter(key)
-    round_key = key_expansion(hexValue_key)
-    
     # storing the actual text length
     text_length = len(text)
     
-    # encryption
-    while len(text)%16 != 0:
-        text += '*'
-    
-    cipher_text = ''
-    for i in range(0, len(text), 16):
-        hexValue_text = string_to_hex_converter(text[i:i+16])
-        temp = encryption(hexValue_text, round_key)
-        cipher_text += temp[2:]
-    
-    cipher_text = '0x' + cipher_text
+    # encrypt 
+    cipher_text = Encrypt(text, key)
     print("cipher text: " + cipher_text)
     
     # decryption
     print("****** Decryption: ******")
-    plain_text = ''
-    for i in range(2, len(cipher_text), 32):
-        temp = '0x' + cipher_text[i:i+32]
-        cipherText_value = int(temp, 16)
-        plain_text_hex = decryption(cipherText_value, round_key)
-        plain_text += hex_to_string_converter(plain_text_hex)
-    
+    plain_text = Decrypt(cipher_text, key)
     print("Plain text: "+ plain_text[:text_length])
 
     
