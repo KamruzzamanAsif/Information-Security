@@ -432,13 +432,31 @@ def Decrypt(cipher_text, key):
     # round key formation
     hexValue_key = string_to_hex_converter(key)
     round_key = key_expansion(hexValue_key)
+    
+    # for CBC encoding the initial vector
+    iv_hex = string_to_hex_converter("Thats My Kung Fu")
 
     plain_text = ''
+    index = 0
+    previous_input = 0
     for i in range(2, len(cipher_text), 32):
         temp = '0x' + cipher_text[i:i+32]
         cipherText_value = int(temp, 16)
         plain_text_hex = decryption(cipherText_value, round_key)
-        plain_text += hex_to_string_converter(plain_text_hex)
+        
+        if(index == 0):
+            previous_input = cipherText_value
+            plain_int = int(plain_text_hex, 16)
+            plain_hex = plain_int ^ iv_hex 
+            plain_text_hex = hex(plain_hex)
+            plain_text += hex_to_string_converter(plain_text_hex)
+            index = index + 1
+        else:
+            plain_int = int(plain_text_hex, 16)
+            plain_hex = plain_int ^ previous_input
+            plain_text_hex = hex(plain_hex)
+            plain_text += hex_to_string_converter(plain_text_hex)
+            previous_input = cipherText_value
     
     return plain_text
 
