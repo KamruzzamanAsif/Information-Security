@@ -412,10 +412,6 @@ def Encrypt(text, key, counter):
     # for CBC encoding the initial vector
     counter = string_to_hex_converter(counter)
     
-    # no need to pad in crt 
-    # while len(text)%16 != 0:
-    #     text += '*'
-    
     cipher_text = ''
     for i in range(0, len(text), 16):
         hexValue_text = string_to_hex_converter(text[i:i+16])
