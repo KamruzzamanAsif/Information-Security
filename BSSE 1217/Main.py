@@ -10,9 +10,13 @@ f.close()
 
 print("Enter a 16 byte key as string: ", end=" ")
 key = input()
+if(len(key)!=16):
+    print("Invalid key")
 
 print("Enter a 16 byte counter as string: ", end=" ")
 counter = input()
+if(len(counter)!=16):
+    print("Invalid counter")
 
 cipher = AES_CTR.Encrypt(text, key, counter)
 fout1 = open("BSSE 1217/output1.txt", "w+")
